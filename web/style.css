@@ -1,0 +1,52 @@
+@media (prefers-color-scheme: dark) {
+  /* The :not(.light) is for the faux input inside of the wallet import confirmation alert */
+  body, .form-control:not(.light), .form-control:focus, .form-control[readonly], textarea {
+    background-color: black;
+    color: #DDDDDD;
+  }
+
+  .form-control:not(.light), .input-group-text {
+    border-color: #555555;
+  }
+
+  .form-control:focus.form-control:not(.light) {
+    border-color: #888888;
+  }
+
+  .form-control:disabled {
+    background-color: #222222;
+  }
+
+  .input-group-text {
+    background-color: #333333;
+    color: #DDDDDD;
+  }
+
+  .modal-content {
+    background-color: #111111;
+  }
+
+  .progress {
+    background-color: #333333;
+  }
+
+  .modal-header, .modal-footer {
+    border-color: #888888;
+  }
+
+  .form-range::-webkit-slider-runnable-track, .form-range::-moz-range-track {
+    background-color: #333333;
+  }
+}
+
+.address-textarea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

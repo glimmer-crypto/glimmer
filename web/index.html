@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Glimmer Client</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="container py-3">
+    <div v-if="node">
+      <h4>
+        Balance
+      </h4>
+      <div class="input-group input-group-lg">
+        <div class="form-control d-flex align-content-center">
+          <textarea class="address-textarea font-monospace user-select-all" rows="1" readonly>
+            {{ address }}
+          </textarea>
+        </div>
+        
+        <span class="input-group-text bg-0">
+          {{ amountString(balance.amount) }}
+        </span>
+      </div>
+
+      <h4 class="mt-4">
+        Send Funds
+      </h4>
+      <transaction-form></transaction-form>
+
+      <h4 class="mt-4">
+        More Options
+      </h4>
+      <button v-if="!walletEncrypted" @click="showSecurityModal" class="btn btn-warning m-1">
+        Create Password
+      </button>
+      <button @click="showDirectTransferModal" class="btn btn-primary m-1">
+        Direct Transfer
+      </button>
+      <button @click="showWalletModal" class="btn btn-primary m-1">
+        Import Wallet
+      </button>
+      <button @click="showWalletExportModal" class="btn btn-primary m-1">
+        Export Wallet
+      </button>
+      <button v-if="walletEncrypted" @click="showSecurityModal" class="btn btn-primary m-1">
+        Change Password
+      </button>
+      <button v-if="walletEncrypted" @click="signOut" class="btn btn-danger m-1">
+        Sign Out
+      </button>
+    </div>
+
+    <authentication-modal :state="authenticationModalState" :wallet="existingWallet"></authentication-modal>
+    <wallet-modal :state="walletModalState"></wallet-modal>
+    <security-modal :state="securityModalState" :address="address" :existing-password="walletEncrypted"></security-modal>
+    <wallet-export-modal :state="walletExportModalState"></wallet-export-modal>
+    <direct-transfer-modal :state="directTransferModalState"></direct-transfer-modal>
+  </div>
+
+  <template id="transaction-form-template">
+    <form @submit.prevent="sendTransaction">
+      <div class="row g-3 align-items-end">
+        <div class="col-4 col-sm-3">
+          <label for="transaction-amount">
+            Amount
+          </label>
+          <input v-model="amount" class="form-control" :class="{ 'is-invalid': error === 'amount' }" id="transaction-amount">
+        </div>
+        <div class="col">
+          <label for="transaction-address">
+            Recipient Address
+          </label>
+          <input v-model="address" class="form-control" :class="{ 'is-invalid': error === 'address' }" id="transaction-address">
+        </div>
+        <div class="col-12 col-sm-auto d-flex justify-content-end">
+          <button class="btn btn-success">
+            Send
+          </button>
+        </div>
+      </div>
+    </form>
+  </template>
+
+  <template id="wallet-modal-template">
+    <div class="modal fade" id="wallet-modal" tabindex="-1" role="dialog" aria-labelledby="wallet-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="wallet-modal-title">
+              {{ state.firstTime ? "Welcome to Glimmer" : "Import or Create a New Wallet" }}
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <div class="fs-5 mb-2">
+                  Import an existing wallet
+                </div>
+
+                <form @submit.prevent="importWallet">
+                  <textarea v-model="wallet" class="form-control font-monospace mb-2" :class="{ 'is-invalid': error === 'wallet' }" rows="2" placeholder="JSON or private key"></textarea>
+
+                  <div class="row g-2 mb-2">
+                    <div class="col">
+                      <input v-model="password" class="form-control" :class="{ 'is-invalid': error === 'password' }" type="password" placeholder="Encryption Password" :disabled="!passwordRequired">
+                    </div>
+                    <div class="col-auto">
+                      <button
+                        v-if="importTask.progress === 0 || importTask.progress === 1"
+                        class="btn btn-primary"
+                      >
+                        Import
+                      </button>
+                      <button v-else @click="importTask.stop = true" class="btn btn-warning" type="button">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div class="progress">
+                  <div class="progress-bar" :style="{ width: importTask.progress * 100 + '%' }"></div>
+                </div>
+
+                <div v-if="importedWallet" class="alert alert-warning mt-3">
+                  Confirm that this address matches the one you are trying to import
+                  <div class="form-control light overflow-auto mt-1">
+                    {{ importedWallet.public.address }}
+                  </div>
+
+                  <div class="d-flex justify-content-end mt-2">
+                    <button @click="confirmImportedWallet" class="btn btn-outline-dark">
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <div class="fs-5 mb-2">
+                  Or create a new one
+                </div>
+                
+                <div class="d-flex justify-content-center">
+                  <button @click="generateWallet()" class="btn btn-success">
+                    Generate Wallet
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!state.firstTime" class="modal-footer">
+            <button @click="hide" class="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="authentication-modal-template">
+    <div class="modal fade" id="authentication-modal" tabindex="-1" role="dialog" aria-labelledby="authentication-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div v-if="wallet" class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="authentication-modal-title">
+              Authentication Required
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <div class="mb-2">
+                  Enter the password for the wallet starting in <code>{{ wallet.publicAddress.slice(0, 8) }}</code>
+                </div>
+
+                <form @submit.prevent="importWallet">
+                  <div class="row g-2 mb-2">
+                    <div class="col">
+                      <input v-model="password" class="form-control" :class="{ 'is-invalid': error }" type="password" placeholder="Enter Password">
+                    </div>
+                    <div class="col-auto">
+                      <button class="btn btn-primary">
+                        Submit
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div v-if="failedAttempts >= 3" class="d-flex justify-content-center mt-4">
+                  <button @click="reset" class="btn btn-danger">
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="security-modal-template">
+    <div class="modal fade" id="security-modal" tabindex="-1" role="dialog" aria-labelledby="security-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="security-modal-title">
+              {{ existingPassword ? "Change Password" : "Create Password" }}
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <div class="mb-2">
+                  Set a password for the wallet starting in <code>{{ address.slice(0, 8) }}</code>
+                </div>
+
+                <form @submit.prevent="setPassword">
+                  <div v-if="existingPassword" class="form-floating mb-3">
+                    <input v-model="currentPassword" class="form-control" :class="{ 'is-invalid': error === 'currentpassword' }" type="password" placeholder="Current Password">
+                    <label>Current Password</label>
+                  </div>
+  
+                  <div class="form-floating mb-2">
+                    <input v-model="newPassword" class="form-control mb-2" :class="{ 'is-invalid': error === 'newpassword' }" type="password" placeholder="New Password">
+                    <label>
+                      {{ existingPassword ? "New Password" : "Encryption Password" }}
+                    </label>
+                  </div>
+                  
+                  <div class="form-floating mb-3">
+                    <input v-model="confirmPassword" class="form-control mb-3" :class="{ 'is-invalid': error === 'confirm' }" type="password" placeholder="Confirm Password">
+                    <label>
+                      {{ existingPassword ? "Confirm New Password" : "Confirm Password" }}
+                    </label>
+                  </div>
+                  
+                  <div class="d-flex justify-content-end">
+                    <button class="btn btn-primary">
+                      {{ existingPassword ? "Set Password" : "Create Password" }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="hide" class="btn btn-secondary">
+              {{ state.firstTime ? "Skip" : "Cancel" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="wallet-export-modal-template">
+    <div class="modal fade" id="wallet-export-modal" tabindex="-1" role="dialog" aria-labelledby="wallet-export-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="wallet-export-modal-title">
+              Export Wallet
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <form @submit.prevent="exportWallet">
+                  <div class="d-flex mb-2">
+                    <div class="pe-2">
+                      Fast
+                    </div>
+                    <input v-model="securityLevel" class="form-range" type="range" min="0" max="6">
+                    <div class="ps-2">
+                      Secure
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-2">
+                    <div class="col">
+                      <input v-model="password" class="form-control" type="password" placeholder="Encryption Password">
+                    </div>
+                    <div class="col-auto">
+                      <button
+                        v-if="exportTask.progress === 0 || exportTask.progress === 1"
+                        class="btn btn-primary"
+                      >
+                        Export
+                      </button>
+                      <button v-else @click="exportTask.stop = true" class="btn btn-warning" type="button">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div class="progress">
+                  <div class="progress-bar" :style="{ width: exportTask.progress * 100 + '%' }"></div>
+                </div>
+
+                <textarea v-if="json" class="form-control font-monospace user-select-all mt-4" :value="json" rows="3" readonly></textarea>
+              </div>
+
+              <div>
+                Private Key
+                <div class="input-group">
+                  <div class="form-control d-flex align-content-center">
+                    <textarea class="address-textarea font-monospace user-select-all" rows="1" readonly>
+                      {{ privateKey() }}
+                    </textarea>
+                  </div>
+                  
+                  <button @click="showPrivate = !showPrivate" class="btn btn-outline-dark">
+                    {{ showPrivate ? "Hide" : "Show" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!state.firstTime" class="modal-footer">
+            <button @click="hide" class="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="direct-transfer-modal-template">
+    <div class="modal fade" id="direct-transfer-modal" tabindex="-1" role="dialog" aria-labelledby="direct-transfer-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="direct-transfer-modal-title">
+              Direct Transfer
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <div class="fs-5 mb-2">
+                  The wallet to transfer from
+                </div>
+
+                <form @submit.prevent="importWallet">
+                  <textarea v-model="wallet" class="form-control font-monospace mb-2" :class="{ 'is-invalid': error === 'wallet' }" placeholder="JSON or private key"></textarea>
+
+                  <div class="row g-2 mb-2">
+                    <div class="col">
+                      <input v-model="password" class="form-control" :class="{ 'is-invalid': error === 'password' }" type="password" placeholder="Encryption Password" :disabled="!passwordRequired">
+                    </div>
+                    <div class="col-auto">
+                      <button
+                        v-if="importTask.progress === 0 || importTask.progress === 1"
+                        class="btn btn-primary"
+                      >
+                        Import
+                      </button>
+                      <button v-else @click="importTask.stop = true" class="btn btn-warning" type="button">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div class="progress">
+                  <div class="progress-bar" :style="{ width: importTask.progress * 100 + '%' }"></div>
+                </div>
+
+                <div v-if="importedWallet" class="alert alert-success mt-4">
+                  Confirm that this address matches the one you are trying to transfer from
+
+                  <div class="form-control light overflow-auto mt-2 mb-3">
+                    {{ importedWallet.public.address }}
+                  </div>
+
+                  <div class="row justify-content-between align-items-end g-2">
+                    <div class="col">
+                      <label class="form-label" for="direct-transfer-amount">
+                        Amount <span class="badge bg-success">{{ amountString(availableFunds) }}</span>
+                      </label>
+                      <input v-model="amount" class="form-control" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount">
+                    </div>
+                    <div class="col-auto">
+                      <button @click="transfer" class="btn btn-outline-success">
+                        Transfer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="hide" class="btn btn-secondary">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/vue@3.0.11"></script>
+
+  <script src="lib/coin-table.min.js"></script>
+
+  <script src="utils/async-storage.js"></script>
+
+  <script src="app.js"></script>
+  <script src="vue-components/transaction-form.js"></script>
+  <script src="vue-components/wallet-modal.js"></script>
+  <script src="vue-components/authentication-modal.js"></script>
+  <script src="vue-components/security-modal.js"></script>
+  <script src="vue-components/wallet-export-modal.js"></script>
+  <script src="vue-components/direct-transfer-modal.js"></script>
+  <script> app = app.mount("#app") </script>
+</body>
+</html>

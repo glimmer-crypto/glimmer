@@ -1,0 +1,16 @@
+{
+  "name": "glimmer",
+  "scripts": {
+    "build": "cd coin-table && npm run build && cd .. && npx webpack",
+    "serve": "node src/serve.js"
+  },
+  "dependencies": {
+    "coin-table": "file:coin-table",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "vue": "^3.0.11",
+    "webpack": "^5.31.1",
+    "webpack-cli": "^4.6.0"
+  }
+}
