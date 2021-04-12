@@ -100,7 +100,7 @@ var app = Vue.createApp({
     
       wallet = undefined
     
-      if (client) { client.disconnect() }
+      if (client) { client.dispose() }
       client = undefined
     
       node = undefined
