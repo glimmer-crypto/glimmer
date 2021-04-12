@@ -1,3 +1,4 @@
 [submodule "coin-table"]
 	path = coin-table
 	url = https://glimmer-crypto@github.com/glimmer-crypto/coin-table.git
+	branch = master
