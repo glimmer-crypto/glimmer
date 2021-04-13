@@ -79,9 +79,9 @@
       </div>
     </div>
 
-    <authentication-modal :state="authenticationModalState" :wallet="existingWallet"></authentication-modal>
+    <authentication-modal :state="authenticationModalState" :wallet="existingWallet" :biometric="biometric"></authentication-modal>
     <wallet-modal :state="walletModalState"></wallet-modal>
-    <security-modal :state="securityModalState" :address="address" :existing-password="walletEncrypted"></security-modal>
+    <security-modal :state="securityModalState" :address="address" :existing-password="walletEncrypted" :biometric="biometric"></security-modal>
     <wallet-export-modal :state="walletExportModalState"></wallet-export-modal>
     <direct-transfer-modal :state="directTransferModalState"></direct-transfer-modal>
   </div>
@@ -293,7 +293,7 @@
           </div>
           <div class="modal-footer">
             <button @click="hide" class="btn btn-secondary">
-              {{ state.firstTime ? "Skip" : "Cancel" }}
+              {{ state.firstTime ? "Skip" : "Done" }}
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 app.component("security-modal", {
-  props: ["state", "address", "existingPassword"],
+  props: ["state", "address", "existingPassword", "biometric"],
   data() {
     return {
       bsModal: null,
@@ -7,9 +7,7 @@ app.component("security-modal", {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-      error: null,
-
-      biometric
+      error: null
     }
   },
   template: document.getElementById("security-modal-template").innerHTML,
@@ -40,24 +38,24 @@ app.component("security-modal", {
       const name = wallet.public.address.slice(0, 10) + "…"
       const id = glimmer.utils.Convert.Base58.decodeBuffer(wallet.public.address)
 
-      await secureStorage.unlock({
-        user: {
-          id, name,
-          displayName: name
-        }
-      })
-
-      await secureStorage.setItem("passwordHash", passwordHash)
-      await appStorage.setItem("biometric", true)
-
-      this.biometric.enabled = true
+      try {
+        await secureStorage.unlock({
+          user: {
+            id, name,
+            displayName: name
+          }
+        })
+  
+        await secureStorage.setItem("passwordHash", passwordHash)
+        this.biometric.enabled = true
+      } catch (err) {
+        console.error(err)
+      }
     },
     async disableBiometric() {
       if (!biometric.enabled) { return }
 
       await secureStorage.reset()
-      await appStorage.removeItem("biometric")
-
       this.biometric.enabled = false
     },
     hide() {

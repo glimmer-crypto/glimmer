@@ -63,19 +63,23 @@ app.component("wallet-modal", {
       setupWallet(importedWallet)
       appStorage.setItem("wallet", importedWallet.exportJSON())
       
-      this.hide()
-      app.walletEncrypted = false
-      app.securityModalState.firstTime = true
-      app.showSecurityModal()
+      this.reset()
     },
     generateWallet() {
       const newWallet = glimmer.Wallet.generate()
       setupWallet(newWallet)
       appStorage.setItem("wallet", newWallet.exportJSON())
 
-      this.hide()
+      this.reset()
+    },
+    reset() {
       app.walletEncrypted = false
+      passwordHash = undefined
+      secureStorage.reset()
+      app.biometric.enabled = false
       app.securityModalState.firstTime = true
+      
+      this.hide()
       app.showSecurityModal()
     },
     hide() {

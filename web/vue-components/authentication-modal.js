@@ -1,14 +1,12 @@
 app.component("authentication-modal", {
-  props: ["state", "wallet"],
+  props: ["state", "wallet", "biometric"],
   data() {
     return {
       bsModal: null,
 
       password: "",
       error: false,
-      failedAttempts: 0,
-
-      biometric
+      failedAttempts: 0
     }
   },
   template: document.getElementById("authentication-modal-template").innerHTML,
@@ -40,10 +38,22 @@ app.component("authentication-modal", {
       }
     },
     async useBiometric() {
-      await secureStorage.unlock()
+      if (!biometric.enabled) { return }
+
+      try {
+        await secureStorage.unlock()
+      } catch (err) {
+        console.error(err)
+        return
+      }
 
       const passwordHash = await secureStorage.getItem("passwordHash")
       this.importWalletWithHash(passwordHash)
+
+      if (this.error) {
+        this.biometric.enabled = false
+        this.error = false
+      }
     },
     reset() {
       app.walletModalState.firstTime = true

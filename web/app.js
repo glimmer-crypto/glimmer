@@ -143,8 +143,18 @@ var app = Vue.createApp({
 
       passwordHash = undefined
       lastAuthentication = undefined
+      secureStorage.lock()
     
       loadStoredData()
+    }
+  },
+  watch: {
+    "biometric.enabled"(enabled) {
+      if (enabled) {
+        appStorage.setItem("biometric", true)
+      } else {
+        appStorage.removeItem("biometric")
+      }
     }
   }
 })
