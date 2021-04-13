@@ -327,7 +327,7 @@
           </div>
           <div v-if="!state.firstTime" class="modal-footer">
             <button @click="hide" class="btn btn-secondary">
-              Cancel
+              {{ json ? "Done" : "Cancel" }}
             </button>
           </div>
         </div>

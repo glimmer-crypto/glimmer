@@ -24,6 +24,9 @@ app.component("wallet-modal", {
       if (!json) {
         this.error = "wallet"
         return
+      } else if (json.salt && !this.password) {
+        this.error = "password"
+        return
       }
 
       this.importedWallet = null
