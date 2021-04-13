@@ -1,4 +1,103 @@
+body {
+  background-image: linear-gradient(to top right, white, 70%, #a9c8ff);
+  background-attachment: fixed;
+}
+
+#app {
+  margin-top: 7.25em;
+}
+
+.balance {
+  padding: 1rem;
+
+  background: linear-gradient(145deg, #2a459e, #6173ff);
+  color: #FFFFFF;
+
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  /* z-index: 1030; */
+
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+}
+
+
+.button-list {
+  display: flex;
+  flex-direction: column;
+}
+.button-list > button {
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  background-color: transparent;
+
+  color: inherit;
+  text-align: start;
+  border: solid #88888888;
+  border-width: 0;
+  padding: 0.5em 1em;
+}
+.button-list > button:hover, .button-list > button:focus {
+  background-color: #88888822;
+}
+.button-list > button:not(:last-child) {
+  border-bottom-width: 1px;
+}
+
+@media (min-width: 576px) {
+  #app {
+    margin-top: 0;
+  }
+
+  .balance {
+    margin: 0.75rem;
+    border-radius: .5rem;
+    position: initial;
+    box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
+  }
+
+  .shadow-card {
+    padding: 1.5rem;
+
+    border-radius: .5rem;
+    box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
+  }
+
+  .button-list > button {
+    padding: 0.25em 0.5em;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .shadow-card {
+      border-color: #333333;
+      border-style: solid;
+      border-width: 1px;
+    }
+  }
+}
+
+.address-textarea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+
 @media (prefers-color-scheme: dark) {
+  body {
+    background-image: linear-gradient(to bottom right, black, 70%, #001b49);
+  }
+
   /* The :not(.light) is for the faux input inside of the wallet import confirmation alert */
   body, .form-control:not(.light), .form-control:focus:not(.light), .form-control[readonly], textarea {
     background-color: black;
@@ -37,16 +136,4 @@
   .form-range::-webkit-slider-runnable-track, .form-range::-moz-range-track {
     background-color: #333333;
   }
-}
-
-.address-textarea {
-  width: 100%;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  resize: none;
-
-  white-space: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
 }

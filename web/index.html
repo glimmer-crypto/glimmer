@@ -10,49 +10,73 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app" class="container py-3">
+  <div id="app" class="container pb-3">
     <div v-if="node">
-      <h4>
-        Balance
-      </h4>
-      <div class="input-group input-group-lg">
-        <div class="form-control d-flex align-content-center">
-          <textarea class="address-textarea font-monospace user-select-all" rows="1" readonly>
-            {{ address }}
-          </textarea>
+      <div class="row">
+        <div class="col col-sm-7 col-md-6 col-lg-5 col-xl-4 balance">
+          <h5 class="fw-light">
+            Your Balance
+          </h5>
+          <div class="display-6 px-3">
+            {{ amountString(balance.amount) }}
+          </div>
         </div>
-        
-        <span class="input-group-text bg-0">
-          {{ amountString(balance.amount) }}
-        </span>
       </div>
+      
+      <div class="row mt-3">
+        <div class="col col-md-7 col-lg-8 col-lg-9">
+          <div class="shadow-card mb-4">
+            <h5>
+              Your Address
+            </h5>
+            <div class="form-control user-select-all overflow-auto">
+              {{ address }}
+            </div>
+          </div>
+    
+          <div class="shadow-card mb-3">
+            <h5>
+              Send Funds
+            </h5>
+            <transaction-form></transaction-form>
+          </div>
+        </div>
+        <div class="col">
+          <div class="shadow-card">
+            <h5>
+              More Options
+            </h5>
+            <div class="button-list">
+              <button v-if="!walletEncrypted" @click="showSecurityModal">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    Create Password
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-warning" viewBox="0 0 16 16">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                  </svg>
+                </div>
+              </button>
+              <button @click="showDirectTransferModal">
+                Direct Transfer
+              </button>
+              <button @click="showWalletModal">
+                Import Wallet
+              </button>
+              <button @click="showWalletExportModal">
+                Export Wallet
+              </button>
+              <button v-if="walletEncrypted" @click="showSecurityModal">
+                Change Password
+              </button>
+            </div>
 
-      <h4 class="mt-4">
-        Send Funds
-      </h4>
-      <transaction-form></transaction-form>
-
-      <h4 class="mt-4">
-        More Options
-      </h4>
-      <button v-if="!walletEncrypted" @click="showSecurityModal" class="btn btn-warning m-1">
-        Create Password
-      </button>
-      <button @click="showDirectTransferModal" class="btn btn-primary m-1">
-        Direct Transfer
-      </button>
-      <button @click="showWalletModal" class="btn btn-primary m-1">
-        Import Wallet
-      </button>
-      <button @click="showWalletExportModal" class="btn btn-primary m-1">
-        Export Wallet
-      </button>
-      <button v-if="walletEncrypted" @click="showSecurityModal" class="btn btn-primary m-1">
-        Change Password
-      </button>
-      <button v-if="walletEncrypted" @click="signOut" class="btn btn-danger m-1">
-        Sign Out
-      </button>
+            <button v-if="walletEncrypted" @click="signOut" class="btn w-100 btn-danger mt-3">
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <authentication-modal :state="authenticationModalState" :wallet="existingWallet"></authentication-modal>
@@ -63,13 +87,13 @@
   </div>
 
   <template id="transaction-form-template">
-    <form @submit.prevent="sendTransaction">
+    <form @submit.prevent="sendTransaction" autocomplete="off">
       <div class="row g-3 align-items-end">
         <div class="col-4 col-sm-3">
           <label for="transaction-amount">
             Amount
           </label>
-          <input v-model="amount" class="form-control" :class="{ 'is-invalid': error === 'amount' }" id="transaction-amount">
+          <input v-model="amount" class="form-control" :class="{ 'is-invalid': error === 'amount' }" id="transaction-amount" type="number" inputmode="decimal">
         </div>
         <div class="col">
           <label for="transaction-address">
@@ -217,38 +241,36 @@
           </div>
           <div class="modal-body">
             <div class="container-fluid">
-              <div class="mb-3">
-                <div class="mb-2">
-                  Set a password for the wallet starting in <code>{{ address.slice(0, 8) }}</code>
+              <div class="mb-2">
+                Set a password for the wallet starting in <code>{{ address.slice(0, 8) }}</code>
+              </div>
+
+              <form @submit.prevent="setPassword">
+                <div v-if="existingPassword" class="form-floating mb-3">
+                  <input v-model="currentPassword" class="form-control" :class="{ 'is-invalid': error === 'currentpassword' }" type="password" placeholder="Current Password">
+                  <label>Current Password</label>
                 </div>
 
-                <form @submit.prevent="setPassword">
-                  <div v-if="existingPassword" class="form-floating mb-3">
-                    <input v-model="currentPassword" class="form-control" :class="{ 'is-invalid': error === 'currentpassword' }" type="password" placeholder="Current Password">
-                    <label>Current Password</label>
-                  </div>
-  
-                  <div class="form-floating mb-2">
-                    <input v-model="newPassword" class="form-control mb-2" :class="{ 'is-invalid': error === 'newpassword' }" type="password" placeholder="New Password">
-                    <label>
-                      {{ existingPassword ? "New Password" : "Encryption Password" }}
-                    </label>
-                  </div>
-                  
-                  <div class="form-floating mb-3">
-                    <input v-model="confirmPassword" class="form-control mb-3" :class="{ 'is-invalid': error === 'confirm' }" type="password" placeholder="Confirm Password">
-                    <label>
-                      {{ existingPassword ? "Confirm New Password" : "Confirm Password" }}
-                    </label>
-                  </div>
-                  
-                  <div class="d-flex justify-content-end">
-                    <button class="btn btn-primary">
-                      {{ existingPassword ? "Set Password" : "Create Password" }}
-                    </button>
-                  </div>
-                </form>
-              </div>
+                <div class="form-floating mb-2">
+                  <input v-model="newPassword" class="form-control mb-2" :class="{ 'is-invalid': error === 'newpassword' }" type="password" placeholder="New Password">
+                  <label>
+                    {{ existingPassword ? "New Password" : "Encryption Password" }}
+                  </label>
+                </div>
+                
+                <div class="form-floating mb-3">
+                  <input v-model="confirmPassword" class="form-control mb-3" :class="{ 'is-invalid': error === 'confirm' }" type="password" placeholder="Confirm Password">
+                  <label>
+                    {{ existingPassword ? "Confirm New Password" : "Confirm Password" }}
+                  </label>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                  <button class="btn btn-primary">
+                    {{ existingPassword ? "Set Password" : "Create Password" }}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
           <div class="modal-footer">
@@ -327,7 +349,7 @@
           </div>
           <div v-if="!state.firstTime" class="modal-footer">
             <button @click="hide" class="btn btn-secondary">
-              {{ json ? "Done" : "Cancel" }}
+              Done
             </button>
           </div>
         </div>
@@ -383,26 +405,28 @@
                     {{ importedWallet.public.address }}
                   </div>
 
-                  <div class="row justify-content-between align-items-end g-2">
-                    <div class="col">
-                      <label class="form-label" for="direct-transfer-amount">
-                        Amount <span class="badge bg-success">{{ amountString(availableFunds) }}</span>
-                      </label>
-                      <input v-model="amount" class="form-control light" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount">
+                  <form @submit.prevent="transfer">
+                    <div class="row justify-content-between align-items-end g-2">
+                      <div class="col">
+                        <label class="form-label" for="direct-transfer-amount">
+                          Amount <span class="badge bg-success">{{ amountString(availableFunds) }}</span>
+                        </label>
+                        <input v-model="amount" class="form-control light" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount">
+                      </div>
+                      <div class="col-auto">
+                        <button class="btn btn-outline-success">
+                          Transfer
+                        </button>
+                      </div>
                     </div>
-                    <div class="col-auto">
-                      <button @click="transfer" class="btn btn-outline-success">
-                        Transfer
-                      </button>
-                    </div>
-                  </div>
+                  </form>
                 </div>
               </div>
             </div>
           </div>
           <div class="modal-footer">
             <button @click="hide" class="btn btn-secondary">
-              Done
+              {{ importedWallet ? "Done" : "Cancel" }}
             </button>
           </div>
         </div>
