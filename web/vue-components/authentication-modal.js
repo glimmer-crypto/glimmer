@@ -6,14 +6,18 @@ app.component("authentication-modal", {
 
       password: "",
       error: false,
-      failedAttempts: 0
+      failedAttempts: 0,
+
+      biometric
     }
   },
   template: document.getElementById("authentication-modal-template").innerHTML,
   methods: {
-    async importWallet() {
+    importWallet() {
       const password = glimmer.utils.Convert.bufferToHex(glimmer.utils.hash(this.password))
-
+      this.importWalletWithHash(password)
+    },
+    importWalletWithHash(password) {
       try {
         const importedWallet = glimmer.Wallet.importJSON(this.wallet, password)
         if (!importedWallet) {
@@ -34,6 +38,12 @@ app.component("authentication-modal", {
         this.failedAttempts += 1
         this.error = true
       }
+    },
+    async useBiometric() {
+      await secureStorage.unlock()
+
+      const passwordHash = await secureStorage.getItem("passwordHash")
+      this.importWalletWithHash(passwordHash)
     },
     reset() {
       app.walletModalState.firstTime = true
@@ -75,6 +85,8 @@ app.component("authentication-modal", {
     } else {
       this.bsModal.hide()
     }
+
+    console.log("Authentication Modal", this)
   }
 })
 

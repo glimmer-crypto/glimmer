@@ -49,6 +49,35 @@ function amountString(amount) {
   return major + "." + minor
 }
 
+const biometricType = (function(){
+  if (!navigator.credentials) { return null }
+
+  const ua = navigator.userAgent
+  if (ua.includes("iPhone") || ua.includes("Macintosh") || ua.includes("iPad")) {
+    const version = navigator.userAgent.split("Version/")[1].split(" ")[0]
+    const major = parseInt(version)
+
+    if (major >= 14) {
+      // https://stackoverflow.com/a/58724631
+      const aspect = window.screen.width / window.screen.height
+      if (aspect.toFixed(3) === "0.462") {
+        return "Face ID"
+      } else {
+        return "Touch ID"
+      }
+    }
+    console.log(version, major)
+  }
+  
+  return null
+}())
+console.log("Biometric type", biometricType)
+
+let biometric = {
+  type: biometricType,
+  enabled: null
+}
+
 var app = Vue.createApp({
   data() {
     return {
@@ -57,6 +86,7 @@ var app = Vue.createApp({
 
       existingWallet: null,
       walletEncrypted: false,
+      biometric,
 
       walletModalState: {
         firstTime: true,
@@ -77,7 +107,7 @@ var app = Vue.createApp({
       },
 
       address: nodeWatchers.address(),
-      balance: nodeWatchers.balance()
+      balance: nodeWatchers.balance(),
     }
   },
   methods: {
@@ -142,6 +172,7 @@ function updateAppData() {
 
 
 const appStorage = new AsyncStorage("appStorage")
+secureStorage.options.expiration = "load"
 
 async function loadStoredData() {
   await appStorage.open()
@@ -182,6 +213,8 @@ async function loadStoredData() {
   } else {
     app.walletModalState.showing = true
   }
+
+  app.biometric.enabled = await appStorage.getItem("biometric") || false
 }
 loadStoredData()
 

@@ -67,7 +67,7 @@
                 Export Wallet
               </button>
               <button v-if="walletEncrypted" @click="showSecurityModal">
-                Change Password
+                Security Settings
               </button>
             </div>
 
@@ -217,6 +217,12 @@
                   </div>
                 </form>
 
+                <div v-if="biometric.enabled" class="d-flex justify-content-center mt-3">
+                  <button @click="useBiometric" class="btn btn-success">
+                    Use {{ biometric.type }}
+                  </button>
+                </div>
+
                 <div v-if="failedAttempts >= 3" class="d-flex justify-content-center mt-4">
                   <button @click="reset" class="btn btn-danger">
                     Reset
@@ -236,16 +242,19 @@
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title" id="security-modal-title">
-              {{ existingPassword ? "Change Password" : "Create Password" }}
+              {{ existingPassword ? "Security Settings" : "Create Password" }}
             </h3>
           </div>
           <div class="modal-body">
             <div class="container-fluid">
-              <div class="mb-2">
-                Set a password for the wallet starting in <code>{{ address.slice(0, 8) }}</code>
+              <div v-if="existingPassword" class="mb-2">
+                Create a password for your wallet starting in <code>{{ address.slice(0, 8) }}</code>
+              </div>
+              <div v-else class="mb-2">
+                Change the password for your wallet starting in <code>{{ address.slice(0, 8) }}</code>
               </div>
 
-              <form @submit.prevent="setPassword">
+              <form @submit.prevent="setPassword" class="mb-3">
                 <div v-if="existingPassword" class="form-floating mb-3">
                   <input v-model="currentPassword" class="form-control" :class="{ 'is-invalid': error === 'currentpassword' }" type="password" placeholder="Current Password">
                   <label>Current Password</label>
@@ -271,6 +280,15 @@
                   </button>
                 </div>
               </form>
+
+              <div v-if="existingPassword && biometric.type" class="mt-4">
+                <button v-if="biometric.enabled" @click="disableBiometric" class="btn btn-danger w-100">
+                  Disable {{ biometric.type }}
+                </button>
+                <button v-else @click="enableBiometric" class="btn btn-success w-100">
+                  Enable {{ biometric.type }}
+                </button>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -440,6 +458,7 @@
   <script src="lib/coin-table.min.js"></script>
 
   <script src="utils/async-storage.js"></script>
+  <script src="utils/secure-storage.min.js"></script>
 
   <script src="app.js"></script>
   <script src="vue-components/transaction-form.js"></script>

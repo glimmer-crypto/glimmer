@@ -7,7 +7,9 @@ app.component("security-modal", {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-      error: null
+      error: null,
+
+      biometric
     }
   },
   template: document.getElementById("security-modal-template").innerHTML,
@@ -29,11 +31,34 @@ app.component("security-modal", {
       await appStorage.setItem("wallet", wallet.exportJSON(password, 100))
 
       app.walletEncrypted = true
+      passwordHash = password
       this.hide()
+    },
+    async enableBiometric() {
+      if (biometric.enabled || !passwordHash) { return }
 
-      this.currentPassword = ""
-      this.newPassword = ""
-      this.confirmPassword = ""
+      const name = wallet.public.address.slice(0, 10) + "…"
+      const id = glimmer.utils.Convert.Base58.decodeBuffer(wallet.public.address)
+
+      await secureStorage.unlock({
+        user: {
+          id, name,
+          displayName: name
+        }
+      })
+
+      await secureStorage.setItem("passwordHash", passwordHash)
+      await appStorage.setItem("biometric", true)
+
+      this.biometric.enabled = true
+    },
+    async disableBiometric() {
+      if (!biometric.enabled) { return }
+
+      await secureStorage.reset()
+      await appStorage.removeItem("biometric")
+
+      this.biometric.enabled = false
     },
     hide() {
       this.state.showing = false
