@@ -75,7 +75,7 @@
           <label for="transaction-address">
             Recipient Address
           </label>
-          <input v-model="address" class="form-control" :class="{ 'is-invalid': error === 'address' }" id="transaction-address">
+          <input v-model="address" class="form-control" :class="{ 'is-invalid': invalidAddress || error === 'address' }" id="transaction-address">
         </div>
         <div class="col-12 col-sm-auto d-flex justify-content-end">
           <button class="btn btn-success">
