@@ -318,7 +318,7 @@
                     </textarea>
                   </div>
                   
-                  <button @click="showPrivate = !showPrivate" class="btn btn-outline-dark">
+                  <button @click="showPrivate = !showPrivate" class="btn btn-outline-primary">
                     {{ showPrivate ? "Hide" : "Show" }}
                   </button>
                 </div>
@@ -388,7 +388,7 @@
                       <label class="form-label" for="direct-transfer-amount">
                         Amount <span class="badge bg-success">{{ amountString(availableFunds) }}</span>
                       </label>
-                      <input v-model="amount" class="form-control" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount">
+                      <input v-model="amount" class="form-control light" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount">
                     </div>
                     <div class="col-auto">
                       <button @click="transfer" class="btn btn-outline-success">

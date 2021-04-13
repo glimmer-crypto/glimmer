@@ -1,6 +1,6 @@
 @media (prefers-color-scheme: dark) {
   /* The :not(.light) is for the faux input inside of the wallet import confirmation alert */
-  body, .form-control:not(.light), .form-control:focus, .form-control[readonly], textarea {
+  body, .form-control:not(.light), .form-control:focus:not(.light), .form-control[readonly], textarea {
     background-color: black;
     color: #DDDDDD;
   }
@@ -9,7 +9,7 @@
     border-color: #555555;
   }
 
-  .form-control:focus.form-control:not(.light) {
+  .form-control:focus:not(.light) {
     border-color: #888888;
   }
 
