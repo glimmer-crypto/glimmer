@@ -45,7 +45,8 @@ app.component("transaction-form", {
       })
       .catch(err => {
         console.error(err)
-        this.error = "address"
+        this.result = err.message
+        this.loading = false
       })
 
       this.loading = true
@@ -54,6 +55,7 @@ app.component("transaction-form", {
   computed: {
     invalidAddress() {
       if (this.address.length < 30) { return null }
+      if (this.address === wallet.public.address) { return true }
 
       try {
         new glimmer.Key.Public(this.address)

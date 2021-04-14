@@ -107,6 +107,10 @@ body {
 
 
 @media (prefers-color-scheme: dark) {
+  .transaction-loading-modal {
+    background-color: #111111;
+  }
+
   body {
     background-image: linear-gradient(to bottom right, black, 70%, #001b49);
   }
