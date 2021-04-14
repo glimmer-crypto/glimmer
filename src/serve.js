@@ -43,7 +43,11 @@ try {
   const tableBuffer = new Uint8Array(fileData)
   savedTable = CoinTable.importBuffer(tableBuffer)
 } catch (err) {
-  console.error(err)
+  // No stored table yet
+
+  if (err.code !== "ENOENT") {
+    console.log(err)
+  }
 }
 
 let knownServers = [
@@ -58,7 +62,11 @@ try {
     })
   })
 } catch (err) {
-  console.error(err)
+  // No stored servers yet
+  
+  if (err.code !== "ENOENT") {
+    console.log(err)
+  }
 }
 console.log("Known servers", knownServers)
 
@@ -81,7 +89,7 @@ knownServers.forEach(serverInfo => {
 
 function saveTable() {
   fs.mkdir(projectRoot + "/storage", err => {
-    if (err.code !== "EEXIST") {
+    if (err && err.code !== "EEXIST") {
       console.error("Failed to save data", err)
       return
     }
@@ -103,7 +111,7 @@ function saveKnownServers() {
 
   if (!utils.Buffer.equal(hash, storedServersJsonHash)) {
     fs.mkdir(projectRoot + "/storage", err => {
-      if (err.code !== "EEXIST") {
+      if (err && err.code !== "EEXIST") {
         console.error("Failed to save servers", err)
         return
       }
