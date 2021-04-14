@@ -23,6 +23,18 @@ body {
   border-bottom-right-radius: .5rem;
 }
 
+.transaction-loading-modal {
+  background-color: white;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  padding: 1.5rem;
+  border-radius: .5rem;
+  box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
+}
 
 .button-list {
   display: flex;

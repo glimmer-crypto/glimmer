@@ -20,12 +20,16 @@ app.component("transaction-form", {
     return {
       amount: "",
       address: "",
-      error: null
+      error: null,
+
+      loadingModal: null,
+      loading: false,
+      result: undefined
     }
   },
   template: document.getElementById("transaction-form-template").innerHTML,
   methods: {
-    async sendTransaction() {
+    sendTransaction() {
       if (this.invalidAddress) { return }
 
       const amount = amountFromString(this.amount)
@@ -34,14 +38,17 @@ app.component("transaction-form", {
         return
       }
 
-      const result = await node.sendTransaction(amount, this.address)
-      if (result) {
-        alert("Transaction Succeeded")
-      } else if (result === null) {
-        alert("Transaction Failed: unable to connect")
-      } else {
-        alert("Transaction Failed: rejected")
-      }
+      node.sendTransaction(amount, this.address)
+      .then(result => {
+        this.loading = false
+        this.result = result
+      })
+      .catch(err => {
+        console.error(err)
+        this.error = "address"
+      })
+
+      this.loading = true
     }
   },
   computed: {
@@ -66,6 +73,20 @@ app.component("transaction-form", {
       if (this.error === "address") {
         this.error = null
       }
+    },
+    loading(loading) {
+      const modal = this.loadingModal
+      if (loading) {
+        modal.show()
+      } else {
+        setTimeout(() => modal.hide(), 3000)
+      }
     }
+  },
+  mounted() {
+    this.loadingModal = new bootstrap.Modal(document.getElementById("transaction-loading-modal"), {
+      keyboard: false,
+      backdrop: "static"
+    })
   }
 })
