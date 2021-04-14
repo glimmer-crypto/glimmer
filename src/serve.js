@@ -58,7 +58,7 @@ try {
   const servers = JSON.parse(json)
   Object.keys(servers).forEach(address => {
     knownServers.push({
-      address, host: knownServers[address]
+      address, host: servers[address]
     })
   })
 } catch (err) {
