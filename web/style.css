@@ -54,15 +54,15 @@ body {
   }
 
   .balance {
-    margin: 0.75rem;
+    margin: 1.5rem 0.75rem;
     border-radius: .5rem;
     position: initial;
     box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
   }
 
   .shadow-card {
+    background-color: white;
     padding: 1.5rem;
-
     border-radius: .5rem;
     box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
   }
@@ -73,6 +73,7 @@ body {
 
   @media (prefers-color-scheme: dark) {
     .shadow-card {
+      background-color: black;
       border-color: #333333;
       border-style: solid;
       border-width: 1px;
