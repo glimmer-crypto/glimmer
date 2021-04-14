@@ -6,6 +6,9 @@ var client
 var node
 
 let storedTable
+let knownServers = [
+  { address: "3HzSquXCpBbMWKffV288Cc1TcgqfgdpaAQcDw2etTrKezf", host: "server0.glimmercrypto.repl.co" }
+]
 
 /**
  * @param { glimmer.Wallet } newWallet
@@ -18,6 +21,10 @@ function setupWallet(newWallet) {
     app.node = true
   }
 
+  knownServers.forEach(server => {
+    client.connectToWebSocket(server.host, server.address)
+  })
+
   node.on("newtable", table => {
     console.log("newtable", table)
     updateAppData()
@@ -25,6 +32,18 @@ function setupWallet(newWallet) {
   node.on("transactioncompleted", transaction => {
     console.log("transactioncompleted", transaction)
     updateAppData()
+
+    if (transaction.sender === wallet.public.address || transaction.reciever === wallet.public.address) {
+      app.transactions.unshift({
+        amount: transaction.amount,
+        sender: transaction.sender,
+        reciever: transaction.reciever,
+        timestamp: transaction.timestamp
+      })
+
+      const clonable = app.transactions.map(t => Object.assign({}, t))
+      appStorage.setItem("transactions", clonable)
+    }
   })
 
   updateAppData()
@@ -76,6 +95,8 @@ let biometric = {
   enabled: null
 }
 
+let transactions = []
+
 var app = Vue.createApp({
   data() {
     return {
@@ -85,6 +106,8 @@ var app = Vue.createApp({
       existingWallet: null,
       walletEncrypted: false,
       biometric,
+
+      transactions,
 
       walletModalState: {
         firstTime: true,
@@ -223,6 +246,13 @@ async function loadStoredData() {
   }
 
   app.biometric.enabled = await appStorage.getItem("biometric") || false
+
+  const storedTransactions = await appStorage.getItem("transactions")
+  if (storedTransactions && storedTransactions.length) {
+    storedTransactions.forEach(transaction => {
+      app.transactions.push(transaction)
+    })
+  }
 }
 loadStoredData()
 

@@ -42,7 +42,7 @@
           </div>
         </div>
         <div class="col">
-          <div class="shadow-card">
+          <div class="shadow-card mb-4">
             <h5>
               More Options
             </h5>
@@ -74,6 +74,18 @@
             <button v-if="walletEncrypted" @click="signOut" class="btn w-100 btn-danger mt-3">
               Sign Out
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="transactions.length" class="row">
+        <div class="col">
+          <div class="shadow-card">
+            <h5>
+              Recent Device Transactions
+            </h5>
+
+            <transaction-list :transactions="transactions" :address="address"></transaction-list>
           </div>
         </div>
       </div>
@@ -147,6 +159,50 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="transaction-list-template">
+    <div v-for="(transaction, i) in transactions" class="row align-items-center p-2" :class="{ 'border-top': i > 0 }">
+      <div class="col-2 col-sm-1 mb-1">
+        <div v-if="transaction.sender === address" class="text-danger">
+          <svg style="width: 1.25em;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M3.5 6a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 1 0-1h2A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-8A1.5 1.5 0 0 1 3.5 5h2a.5.5 0 0 1 0 1h-2z"/>
+            <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 1.707V10.5a.5.5 0 0 1-1 0V1.707L5.354 3.854a.5.5 0 1 1-.708-.708l3-3z"/>
+          </svg>
+        </div>
+        <div v-else class="text-success">
+          <svg style="width: 1.3em;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M3.5 6a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 1 0-1h2A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-8A1.5 1.5 0 0 1 3.5 5h2a.5.5 0 0 1 0 1h-2z"/>
+            <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="col">
+        {{ amountString(transaction.amount) }}
+      </div>
+
+      <div class="col-auto font-monospace">
+        <button @click="setTransactionFormRecipient(transaction)" class="btn btn-link" :title="otherParty(transaction)">
+          <span class="d-md-none">
+            {{ otherParty(transaction).slice(0, 8) }}…
+          </span>
+          <span class="d-none d-md-block d-lg-none">
+            {{ otherParty(transaction).slice(0, 16) }}…
+          </span>
+          <span class="d-none d-lg-block d-xl-none">
+            {{ otherParty(transaction).slice(0, 32) }}…
+          </span>
+          <span class="d-none d-xl-block">
+            {{ otherParty(transaction) }}
+          </span>
+        </button>
+      </div>
+
+      <div class="d-none d-sm-block col-sm-5 col-md-4 col-lg-3 col-xl-2 text-end">
+        {{ dateString(transaction) }}
       </div>
     </div>
   </template>
@@ -503,6 +559,7 @@
 
   <script src="app.js"></script>
   <script src="vue-components/transaction-form.js"></script>
+  <script src="vue-components/transaction-list.js"></script>
   <script src="vue-components/wallet-modal.js"></script>
   <script src="vue-components/authentication-modal.js"></script>
   <script src="vue-components/security-modal.js"></script>

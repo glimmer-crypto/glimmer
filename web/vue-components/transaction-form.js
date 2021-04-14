@@ -88,5 +88,7 @@ app.component("transaction-form", {
       keyboard: false,
       backdrop: "static"
     })
+
+    window.transactionForm = this
   }
 })
