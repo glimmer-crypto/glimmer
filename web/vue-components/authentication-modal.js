@@ -95,8 +95,6 @@ app.component("authentication-modal", {
     } else {
       this.bsModal.hide()
     }
-
-    console.log("Authentication Modal", this)
   }
 })
 

@@ -66,12 +66,10 @@ const biometricType = (function(){
         return "Touch ID"
       }
     }
-    console.log(version, major)
   }
   
   return null
 }())
-console.log("Biometric type", biometricType)
 
 let biometric = {
   type: biometricType,
