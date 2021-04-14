@@ -25,7 +25,7 @@ app.component("transaction-form", {
   },
   template: document.getElementById("transaction-form-template").innerHTML,
   methods: {
-    sendTransaction() {
+    async sendTransaction() {
       if (this.invalidAddress) { return }
 
       const amount = amountFromString(this.amount)
@@ -34,7 +34,14 @@ app.component("transaction-form", {
         return
       }
 
-      node.sendTransaction(amount, this.address)
+      const result = await node.sendTransaction(amount, this.address)
+      if (result) {
+        alert("Transaction Succeeded")
+      } else if (result === null) {
+        alert("Transaction Failed: unable to connect")
+      } else {
+        alert("Transaction Failed: rejected")
+      }
     }
   },
   computed: {
