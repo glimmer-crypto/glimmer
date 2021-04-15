@@ -41,7 +41,15 @@ function setupWallet(newWallet) {
         timestamp: transaction.timestamp
       })
 
-      const clonable = app.transactions.map(t => Object.assign({}, t))
+      const clonable = app.transactions.reduce((filtered, transaction) => {
+        let previousTransaction = filtered[filtered.length - 1]
+        if (!previousTransaction || previousTransaction.timestamp > transaction.timestamp) {
+          filtered.push(Object.assign({}, transaction))
+        }
+
+        return filtered
+      }, []) // This will fix problems caused previously
+
       appStorage.setItem("transactions", clonable)
     }
   })
@@ -51,6 +59,8 @@ function setupWallet(newWallet) {
   })
   client.on("disconnection", (conn) => {
     console.log("disconnection", conn)
+
+    if (!client) { return }
 
     let connected = false
     for (const connection of client.allConnections) {
@@ -268,6 +278,8 @@ async function loadStoredData() {
 
   const storedTransactions = await appStorage.getItem("transactions")
   if (storedTransactions && storedTransactions.length) {
+    app.transactions = []
+
     storedTransactions.forEach(transaction => {
       app.transactions.push(transaction)
     })
