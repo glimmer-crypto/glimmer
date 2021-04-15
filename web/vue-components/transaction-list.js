@@ -45,7 +45,11 @@ app.component("transaction-list", {
       transactionForm.address = this.otherParty(transaction)
     }
   },
-  mounted() {
-    
+  computed: {
+    filteredTransactions() {
+      return this.transactions.filter(transaction => {
+        return transaction.sender === this.address || transaction.reciever === this.address
+      })
+    }
   }
 })
