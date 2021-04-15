@@ -13,7 +13,7 @@
   <div id="app" class="container pb-3">
     <div v-if="node">
       <div class="row mt-3">
-        <div class="col col-sm-7 col-md-6 col-lg-5 col-xl-4">
+        <div class="col col-md-6 col-lg-5 col-xl-4">
           <div class="balance shadow-card">
             <h5 class="fw-light">
               Your Balance
@@ -59,17 +59,20 @@
                   </svg>
                 </div>
               </button>
+              <button @click="showWalletExportModal">
+                Wallet Info
+              </button>
+              <button @click="showBalanceLookupModal">
+                Balance Lookup
+              </button>
               <button @click="showDirectTransferModal">
                 Direct Transfer
               </button>
-              <button @click="showWalletModal">
-                Import Wallet
-              </button>
-              <button @click="showWalletExportModal">
-                Export Wallet
-              </button>
               <button v-if="walletEncrypted" @click="showSecurityModal">
                 Security Settings
+              </button>
+              <button @click="showWalletModal">
+                Import Wallet
               </button>
             </div>
 
@@ -98,6 +101,7 @@
     <security-modal :state="securityModalState" :address="address" :existing-password="walletEncrypted" :biometric="biometric"></security-modal>
     <wallet-export-modal :state="walletExportModalState"></wallet-export-modal>
     <direct-transfer-modal :state="directTransferModalState"></direct-transfer-modal>
+    <balance-lookup-modal :state="balanceLookupModalState"></balance-lookup-modal>
   </div>
 
   <template id="transaction-form-template">
@@ -212,7 +216,7 @@
         </button>
       </div>
 
-      <div class="d-none d-sm-block col-sm-5 col-md-4 col-lg-3 col-xl-2 text-end">
+      <div class="d-none d-sm-block col-auto ms-auto">
         {{ dateString(transaction) }}
       </div>
     </div>
@@ -562,6 +566,104 @@
     </div>
   </template>
 
+  <template id="balance-lookup-modal-template">
+    <div class="modal fade" id="balance-lookup-modal" tabindex="-1" role="dialog" aria-labelledby="balance-lookup-modal-title" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="balance-lookup-modal-title">
+              Balance Lookup
+            </h3>
+          </div>
+          <div class="modal-body">
+            <div class="container-fluid">
+              <div class="mb-3">
+                <div class="fs-5 mb-2">
+                  Enter the address of a wallet
+                </div>
+
+                <form @submit.prevent="lookUp">
+                  <div class="row g-3 mb-3">
+                    <div class="col">
+                      <input v-model="address" class="form-control" :class="{ 'is-invalid': error }">
+                    </div>
+                    <div class="col-auto">
+                      <button class="btn btn-primary">
+                        Look Up
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div v-if="balance !== null">
+                  <div v-if="balance" class="shadow-card shadow-none border">
+                    <div class="row">
+                      <div class="col-12 col-sm mb-3 mb-sm-0">
+                        <div class="mb-1">
+                          Balance
+                        </div>
+                        <div class="fs-5 p-1">
+                          {{ amountString(balance.amount) }}
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-8">
+                        <div class="mb-1">
+                          Last Transaction
+                        </div>
+                        <div class="fs-5 p-1">
+                          {{ formatDate(balance.timestamp) }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="lastMutualTransaction" class="mt-4">
+                      <div class="mb-1">
+                        Last Mutual Transaction
+                      </div>
+                      <div class="p-1">
+                        <div class="row align-items-center">
+                          <div class="col-2 mb-1">
+                            <div v-if="lastMutualTransaction.reciever === address" class="text-danger">
+                              <svg style="width: 1.25em;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M3.5 6a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 1 0-1h2A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-8A1.5 1.5 0 0 1 3.5 5h2a.5.5 0 0 1 0 1h-2z"/>
+                                <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 1.707V10.5a.5.5 0 0 1-1 0V1.707L5.354 3.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                              </svg>
+                            </div>
+                            <div v-else class="text-success">
+                              <svg style="width: 1.3em;" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M3.5 6a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5h-2a.5.5 0 0 1 0-1h2A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 14.5v-8A1.5 1.5 0 0 1 3.5 5h2a.5.5 0 0 1 0 1h-2z"/>
+                                <path fill-rule="evenodd" d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                              </svg>
+                            </div>
+                          </div>
+                          
+                          <div class="col">
+                            {{ amountString(lastMutualTransaction.amount) }}
+                          </div>
+                    
+                          <div class="col-auto ms-auto">
+                            {{ formatDate(lastMutualTransaction.timestamp) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="alert alert-danger py-2">
+                    No balance found for the provided address
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="hide" class="btn btn-secondary">
+              {{ balance === null ? "Cancel" : "Done" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/vue@3.0.11"></script>
 
@@ -578,6 +680,7 @@
   <script src="vue-components/security-modal.js"></script>
   <script src="vue-components/wallet-export-modal.js"></script>
   <script src="vue-components/direct-transfer-modal.js"></script>
+  <script src="vue-components/balance-lookup-modal.js"></script>
   <script> app = app.mount("#app") </script>
 </body>
 </html>

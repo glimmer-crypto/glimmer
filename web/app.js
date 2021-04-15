@@ -124,8 +124,6 @@ let biometric = {
   enabled: null
 }
 
-let transactions = []
-
 var app = Vue.createApp({
   data() {
     return {
@@ -136,25 +134,20 @@ var app = Vue.createApp({
       walletEncrypted: false,
       biometric,
 
-      transactions,
+      transactions: [],
 
       walletModalState: {
         firstTime: true,
-        showing: false
-      },
-      authenticationModalState: {
         showing: false
       },
       securityModalState: {
         firstTime: true,
         showing: false
       },
-      walletExportModalState: {
-        showing: false
-      },
-      directTransferModalState: {
-        showing: false
-      },
+      authenticationModalState: { showing: false },
+      walletExportModalState: { showing: false },
+      directTransferModalState: { showing: false },
+      balanceLookupModalState: { showing: false },
 
       address: nodeWatchers.address(),
       balance: nodeWatchers.balance(),
@@ -173,6 +166,10 @@ var app = Vue.createApp({
     showDirectTransferModal() {
       this.directTransferModalState.showing = true
     },
+    showBalanceLookupModal() {
+      this.balanceLookupModalState.showing = true
+    },
+
     amountString,
     signOut() {
       // Not signed in
@@ -190,6 +187,7 @@ var app = Vue.createApp({
       this.securityModalState.showing = false
       this.walletExportModalState.showing = false
       this.directTransferModalState.showing = false
+      this.balanceLookupModalState.showing = false
 
       passwordHash = undefined
       lastAuthentication = undefined
