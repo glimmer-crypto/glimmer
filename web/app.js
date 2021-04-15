@@ -46,6 +46,25 @@ function setupWallet(newWallet) {
     }
   })
 
+  client.on("connection", (conn) => {
+    console.log("connection", conn)
+  })
+  client.on("disconnection", (conn) => {
+    console.log("disconnection", conn)
+
+    let connected = false
+    for (const connection of client.allConnections) {
+      if (connection.state === "open") {
+        connected = false
+        break
+      }
+    }
+
+    if (!connected) {
+      console.log("No remaining connections")
+    }
+  })
+
   updateAppData()
 }
 
