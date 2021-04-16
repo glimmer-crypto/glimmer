@@ -62,7 +62,6 @@ app.component("balance-lookup-modal", {
     }
   },
   mounted() {
-    console.log("Mounting", this)
     const state = this.state
 
     const modalEl = document.getElementById("balance-lookup-modal")

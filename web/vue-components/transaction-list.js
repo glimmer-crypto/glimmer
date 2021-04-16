@@ -43,6 +43,7 @@ app.component("transaction-list", {
     },
     setTransactionFormRecipient(transaction) {
       transactionForm.address = this.otherParty(transaction)
+      document.getElementById("transaction-address").focus()
     }
   },
   computed: {
