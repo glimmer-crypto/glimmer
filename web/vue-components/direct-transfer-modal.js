@@ -75,8 +75,7 @@ app.component("direct-transfer-modal", {
 
         console.log(transaction)
 
-        node.table.applyTransaction(transaction)
-        client.shareTransaction(transaction)
+        await node.handleTransaction(transaction)
         updateAppData()
         this.recomputeAvailable += 1
       } catch (err) {
@@ -90,7 +89,8 @@ app.component("direct-transfer-modal", {
   computed: {
     passwordRequired() {
       const json = walletJsonFromString(this.wallet)
-      return !!json.salt
+      if (json) { return !!json.salt }
+      return false
     },
     availableFunds() {
       this.recomputeAvailable;
@@ -112,6 +112,7 @@ app.component("direct-transfer-modal", {
       } else {
         this.wallet = ""
         this.password = ""
+        this.amount = ""
         this.error = null
         this.importTask.progress = 0
         this.importedWallet = null
