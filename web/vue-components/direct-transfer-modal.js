@@ -22,12 +22,6 @@ app.component("direct-transfer-modal", {
       const importTask = this.importTask
       if (importTask.progress > 0 && importTask.progress < 1) { return }
 
-      let json = walletJsonFromString(this.wallet)
-      if (!json) {
-        this.error = "wallet"
-        return
-      }
-
       this.importedWallet = null
       importTask.stop = null
       if (importTask.progress !== 0) {
@@ -35,25 +29,48 @@ app.component("direct-transfer-modal", {
         await new Promise(r => setTimeout(r, 700))
       }
 
-      try {
-        const importedWallet = await glimmer.Wallet.importJSON(json, this.password, importTask)
-        if (importedWallet) {
-          importTask.progress = 1
-        } else {
+      if (!this.wallet) {
+        this.error = "wallet"
+        return
+      }
+
+      /** @type { glimmer.Wallet } */
+      let importedWallet
+
+      let json = walletJsonFromString(this.wallet)
+      if (json) {
+        try {
+          importedWallet = await glimmer.Wallet.importJSON(json, this.password, importTask)
+        } catch(err) {
           importTask.progress = 0
+
+          if (err.message === "Public address incompatible with the private key") {
+            this.error = "password"
+          } else {
+            this.error = "wallet"
+            console.error(err)
+          }
+        }
+      } else {
+        try {
+          await loadWordList()
+
+          let seedPhrase = wordList.normalizeSeedPhrase(this.wallet)
+          if (!seedPhrase) { seedPhrase = this.wallet }
+
+          importedWallet = await glimmer.Wallet.fromSeedPhrase(seedPhrase, this.password, importTask)
+        } catch (err) {
+          // In the unlikely event of an error
+          this.error = "wallet"
           return
         }
-
+      }
+      
+      if (importedWallet) {
+        importTask.progress = 1
         this.importedWallet = importedWallet
-      } catch (err) {
-        console.error(err)
+      } else {
         importTask.progress = 0
-
-        if (err.message === "Public address incompatible with the private key") {
-          this.error = "password"
-        } else {
-          this.error = "wallet"
-        }
       }
     },
     amountString,
@@ -87,10 +104,15 @@ app.component("direct-transfer-modal", {
     }
   },
   computed: {
-    passwordRequired() {
+    disablePasswordField() {
+      if (!this.wallet) { return true }
+
       const json = walletJsonFromString(this.wallet)
-      if (json) { return !!json.salt }
-      return false
+      if (json) {
+        return !json.salt
+      } else {
+        return false
+      }
     },
     availableFunds() {
       this.recomputeAvailable;

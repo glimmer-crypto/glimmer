@@ -1,3 +1,17 @@
+/** @type { glimmer.Wallet.WordList } */
+var wordList
+let wordListLoading
+async function loadWordList() {
+  if (wordListLoading) {
+    return wordListLoading
+  } else {
+    wordList = await fetch("utils/wordlist.txt").then(req => req.text())
+    wordList = wordList.split("\n")
+    wordList = new glimmer.Wallet.WordList(wordList)
+  }
+}
+wordListLoading = loadWordList()
+
 app.component("wallet-modal", {
   props: ["state"],
   data() {
@@ -11,6 +25,11 @@ app.component("wallet-modal", {
         progress: 0
       },
 
+      generatingSeed: false,
+      generatedSeed: false,
+
+      seedDownloadUrl: null,
+      importedSeed: null,
       importedWallet: null
     }
   },
@@ -20,15 +39,7 @@ app.component("wallet-modal", {
       const importTask = this.importTask
       if (importTask.progress > 0 && importTask.progress < 1) { return }
 
-      let json = walletJsonFromString(this.wallet)
-      if (!json) {
-        this.error = "wallet"
-        return
-      } else if (json.salt && !this.password) {
-        this.error = "password"
-        return
-      }
-
+      this.seedDownloadUrl = null
       this.importedWallet = null
       importTask.stop = null
       if (importTask.progress !== 0) {
@@ -36,51 +47,96 @@ app.component("wallet-modal", {
         await new Promise(r => setTimeout(r, 700))
       }
 
-      try {
-        const importedWallet = await glimmer.Wallet.importJSON(json, this.password, importTask)
-        if (importedWallet) {
-          importTask.progress = 1
-        } else {
+      if (!this.wallet) {
+        this.error = "wallet"
+        return
+      }
+
+      /** @type { glimmer.Wallet } */
+      let importedWallet
+
+      let json = walletJsonFromString(this.wallet)
+      if (json) {
+        try {
+          importedWallet = await glimmer.Wallet.importJSON(json, this.password, importTask)
+        } catch(err) {
           importTask.progress = 0
+
+          if (err.message === "Public address incompatible with the private key") {
+            this.error = "password"
+          } else {
+            this.error = "wallet"
+            console.error(err)
+          }
+        }
+      } else {
+        try {
+          await loadWordList()
+
+          let seedPhrase = wordList.normalizeSeedPhrase(this.wallet)
+          if (!seedPhrase) { seedPhrase = this.wallet }
+
+          importedWallet = await glimmer.Wallet.fromSeedPhrase(seedPhrase, this.password, importTask)
+
+          if (importedWallet) {
+            let url = "data:text/plain," + encodeURIComponent(seedPhrase)
+            url += encodeURIComponent("\n\n\nAddress: " + importedWallet.public.address)
+            if (this.password) {
+              url += encodeURIComponent("\n(The wallet is additionally secured by a password)")
+            }
+            url += encodeURIComponent("\n\n\n\nWrite down this seed and store it in a secure place")
+
+            this.seedDownloadUrl = url
+          }
+        } catch (err) {
+          // In the unlikely event of an error
+          console.error(err)
+          
+          this.error = "wallet"
           return
         }
-
+      }
+      
+      if (importedWallet) {
+        importTask.progress = 1
         this.importedWallet = importedWallet
-      } catch (err) {
-        console.error(err)
+      } else {
         importTask.progress = 0
-
-        if (err.message === "Public address incompatible with the private key") {
-          this.error = "password"
-        } else {
-          this.error = "wallet"
-        }
       }
     },
-    confirmImportedWallet() {
+    async confirmImportedWallet() {
       const importedWallet = this.importedWallet
-
       setupWallet(importedWallet)
-      appStorage.setItem("wallet", importedWallet.exportJSON())
-      
-      this.reset()
-    },
-    generateWallet() {
-      const newWallet = glimmer.Wallet.generate()
-      setupWallet(newWallet)
-      appStorage.setItem("wallet", newWallet.exportJSON())
 
-      this.reset()
-    },
-    reset() {
-      app.walletEncrypted = false
-      passwordHash = undefined
-      secureStorage.reset()
-      app.biometric.enabled = false
-      app.securityModalState.firstTime = true
-      
       this.hide()
-      app.showSecurityModal()
+      
+      if (passwordHash) {
+        const encryptedWallet = importedWallet.exportJSON(passwordHash, 100)
+        await appStorage.setItem("wallet", encryptedWallet)
+      } else {
+        await appStorage.setItem("wallet", importedWallet.exportJSON())
+
+        app.walletEncrypted = false
+        passwordHash = undefined
+        secureStorage.reset()
+        app.biometric.enabled = false
+        app.securityModalState.firstTime = true
+
+        app.showSecurityModal()
+      }
+    },
+    async generateSeed() {
+      this.generatingSeed = true
+
+      this.importedWallet = null
+      this.importTask.progress = 0
+
+      await loadWordList()
+
+      this.wallet = wordList.generateSeedPhrase()
+      this.generatedSeed = true
+
+      this.generatingSeed = false
     },
     hide() {
       this.state.showing = false
@@ -96,6 +152,9 @@ app.component("wallet-modal", {
         this.password = ""
         this.error = null
         this.importTask.progress = 0
+        this.generatingSeed = false
+        this.generatedSeed = false
+        this.seedDownloadUrl = null
         this.importedWallet = null
 
         this.bsModal.hide()
@@ -118,13 +177,33 @@ app.component("wallet-modal", {
     wallet() {
       if (this.error === "wallet") {
         this.error = null
+
+        if (this.generatedSeed && (this.wallet === "" || walletJsonFromString(this.wallet))) {
+          this.generatedSeed = false
+        }
       }
     }
   },
   computed: {
-    passwordRequired() {
+    disablePasswordField() {
+      if (!this.wallet) { return true }
+
       const json = walletJsonFromString(this.wallet)
-      return !!json.salt
+      if (json) {
+        return !json.salt
+      } else {
+        return false
+      }
+    },
+    dangerousSeed() {
+      if (!this.wallet) { return false }
+
+      let json = walletJsonFromString(this.wallet)
+      if (json) { return false }
+
+      if (!wordList) { return false }
+      if (wordList.normalizeSeedPhrase(this.wallet)) { return false }
+      return true 
     }
   },
   mounted() {
@@ -147,6 +226,9 @@ app.component("wallet-modal", {
   }
 })
 
+/**
+ * @param { string } walletString
+ */
 function walletJsonFromString(walletString) {
   try {
     const json = JSON.parse(walletString)
@@ -161,7 +243,7 @@ function walletJsonFromString(walletString) {
       console.error(err)
     }
 
-    if (glimmer.utils.Convert.Base58.isEncodedString(walletString)) {
+    if (walletString.length >= 42 && walletString.length <= 44 && glimmer.utils.Convert.Base58.isEncodedString(walletString)) {
       return {
         privateKey: walletString
       }

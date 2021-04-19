@@ -30,13 +30,14 @@ app.component("security-modal", {
 
       app.walletEncrypted = true
       passwordHash = password
-      this.hide()
+
+      this.state.firstTime = false
     },
     async enableBiometric() {
       if (biometric.enabled || !passwordHash) { return }
 
-      const name = wallet.public.address.slice(0, 10) + "…"
-      const id = glimmer.utils.Convert.Base58.decodeBuffer(wallet.public.address)
+      const name = "Glimmer Wallet"
+      const id = new Uint8Array([71, 108, 105, 109, 109, 101, 114])
 
       try {
         await secureStorage.unlock({

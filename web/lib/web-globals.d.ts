@@ -1,4 +1,4 @@
-import { CoinTable, Wallet, Node, Network, Key, utils } from "../../coin-table/dist"
+import { CoinTable, Wallet, Node, Network, Key, utils } from "../../coin-table/lib"
 
 type CoinTablePackage = {
   CoinTable: typeof CoinTable,
@@ -10,8 +10,10 @@ type CoinTablePackage = {
 }
 
 type _cointable = CoinTable
-type _wallet = Wallet
 type _node = Node
+
+type _wallet = Wallet
+type _wallet_wordlist = Wallet.WordList
 
 type _key_public = Key.Public
 type _key_private = Key.Private
@@ -30,8 +32,12 @@ declare global {
 
   namespace glimmer {
     type CoinTable = _cointable
-    type Wallet = _wallet
     type Node = _node
+
+    type Wallet = _wallet
+    namespace Wallet {
+      type WordList = _wallet_wordlist
+    }
 
     namespace Key {
       type Public = _key_public
