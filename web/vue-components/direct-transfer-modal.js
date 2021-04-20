@@ -92,7 +92,7 @@ app.component("direct-transfer-modal", {
 
         console.log(transaction)
 
-        await node.handleTransaction(transaction)
+        await node.processTransaction(transaction)
         updateAppData()
         this.recomputeAvailable += 1
       } catch (err) {
