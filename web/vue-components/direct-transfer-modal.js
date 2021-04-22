@@ -76,7 +76,6 @@ app.component("direct-transfer-modal", {
     amountString,
     async transfer() {
       const amount = amountFromString(this.amount)
-      console.log(this.amount, amount)
       if (isNaN(amount) || amount === 0 || amount > this.availableFunds) {
         this.error = "amount"
         return

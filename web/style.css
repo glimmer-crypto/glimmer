@@ -76,6 +76,14 @@ body {
   background: linear-gradient(145deg, #2a459e, #6173ff);
   color: #FFFFFF;
   border: none;
+
+  display: inline-block;
+  min-width: 100%;
+}
+@media (min-width: 768px) {
+  .balance {
+    min-width: 40%;
+  }
 }
 
 .address-textarea {
