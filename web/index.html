@@ -101,7 +101,7 @@
   </div>
 
   <template id="transaction-form-template">
-    <form @submit.prevent="sendTransaction" autocomplete="off">
+    <form @submit.prevent="sendTransaction" autocomplete="off" novalidate>
       <div class="row g-3 align-items-end">
         <div class="col-4 col-sm-3">
           <label for="transaction-amount">
@@ -484,10 +484,8 @@
                   Private Key
                 </h6>
                 <div class="input-group">
-                  <div class="form-control d-flex align-content-center">
-                    <textarea class="address-textarea font-monospace user-select-all" rows="1" readonly>
-                      {{ privateKey() }}
-                    </textarea>
+                  <div class="form-control overflow-auto font-monospace" :class="showPrivate ? 'user-select-all' : 'user-select-none'">
+                    {{ privateKey() }}
                   </div>
                   
                   <button @click="showPrivate = !showPrivate" class="btn btn-outline-primary">
@@ -555,21 +553,24 @@
                     {{ importedWallet.public.address }}
                   </div>
 
-                  <form @submit.prevent="transfer">
-                    <div class="row justify-content-between align-items-end g-2">
-                      <div class="col">
-                        <label class="form-label" for="direct-transfer-amount">
-                          Amount <span class="badge bg-success">{{ amountString(availableFunds) }}</span>
-                        </label>
-                        <input v-model="amount" class="form-control light" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount" type="number" step="0.00000001" inputmode="decimal">
-                      </div>
-                      <div class="col-auto">
-                        <button class="btn btn-outline-success">
-                          Transfer
-                        </button>
-                      </div>
+                  <div class="mb-2">
+                    <label class="form-label" for="direct-transfer-amount">
+                      Amount <button @click="amount = amountString(availableFunds).split(',').join('')" class="btn badge bg-success text-white ms-1">{{ amountString(availableFunds) }}</button>
+                    </label>
+                    <input v-model="amount" class="form-control light" :class="{ 'is-invalid': error === 'amount' }" id="direct-transfer-amount" type="number" step="0.00000001" inputmode="decimal">
+                  </div>
+                  <div class="row g-2">
+                    <div class="col">
+                      <button @click="deposit" class="btn btn-danger w-100">
+                        Deposit
+                      </button>
                     </div>
-                  </form>
+                    <div class="col">
+                      <button @click="withdraw" class="btn btn-success w-100">
+                        Withdraw
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

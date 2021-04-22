@@ -120,7 +120,7 @@ const biometricType = (function(){
 }())
 
 let biometric = {
-  type: biometricType,
+  type: biometricType || "Biometric",
   enabled: null
 }
 

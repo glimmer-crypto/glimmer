@@ -22,6 +22,7 @@ app.component("direct-transfer-modal", {
       const importTask = this.importTask
       if (importTask.progress > 0 && importTask.progress < 1) { return }
 
+      this.amount = ""
       this.importedWallet = null
       importTask.stop = null
       if (importTask.progress !== 0) {
@@ -74,7 +75,7 @@ app.component("direct-transfer-modal", {
       }
     },
     amountString,
-    async transfer() {
+    async withdraw() {
       const amount = amountFromString(this.amount)
       if (isNaN(amount) || amount === 0 || amount > this.availableFunds) {
         this.error = "amount"
@@ -89,10 +90,29 @@ app.component("direct-transfer-modal", {
         let transaction = importedWallet.createTransaction(amount, wallet.public)
         transaction = wallet.signTransaction(transaction)
 
-        console.log(transaction)
+        await node.processTransaction(transaction)
+        this.recomputeAvailable += 1
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    async deposit() {
+      const amount = amountFromString(this.amount)
+      const myBalance = node.table.balances[wallet.public.address]
+      if (isNaN(amount) || amount === 0 || !myBalance || amount > myBalance.amount) {
+        this.error = "amount"
+        return
+      }
+
+      /** @type { glimmer.Wallet } */
+      const importedWallet = this.importedWallet
+      importedWallet.node = node
+
+      try {
+        let transaction = wallet.createTransaction(amount, importedWallet.public)
+        transaction = importedWallet.signTransaction(transaction)
 
         await node.processTransaction(transaction)
-        updateAppData()
         this.recomputeAvailable += 1
       } catch (err) {
         console.error(err)
