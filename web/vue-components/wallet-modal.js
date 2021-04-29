@@ -62,7 +62,7 @@ app.component("wallet-modal", {
         } catch(err) {
           importTask.progress = 0
 
-          if (err.message === "Public address incompatible with the private key") {
+          if (err.message === "Public address incompatible with the private key" || err.message === "Missing password") {
             this.error = "password"
           } else {
             this.error = "wallet"
