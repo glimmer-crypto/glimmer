@@ -1,0 +1,11 @@
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 16 16">
+  <defs>
+    <!-- background-image: linear-gradient(to bottom right, black, 70%, #001b49) -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="black"/>
+      <stop stop-color="#001b49" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <rect width="16" height="16" fill="url(#bg)"/>
+  <path d="M7.575 2.05Q7.15 7.15 3.75 7.575C2.9 7.7025 2.9 8.2975 3.75 8.425Q7.15 8.85 7.575 13.95C7.7025 14.8 8.2975 14.8 8.425 13.95Q8.85 8.85 12.25 8.425C13.1 8.2975 13.1 7.7025 12.25 7.575Q8.85 7.15 8.425 2.05C8.2975 1.2 7.7025 1.2 7.575 2.05" fill="#e6e55c"/>
+</svg>
