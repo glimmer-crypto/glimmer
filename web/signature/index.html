@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Signature Tool - Glimmer</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+</head>
+<body>
+  <div id="app" class="container py-3 font-monospace">
+    <h3 class="mb-4">
+      Digital Signature Tool
+    </h3>
+
+    <label for="private-key">
+      Private Key
+    </label>
+    <div class="input-group">
+      <input v-model="prvKey" class="form-control" :class="{ 'is-invalid': error === 'private' }" :type="showPrivate ? 'text' : 'password'" id="private-key">
+      <button v-if="!prvKey" @click="fillPrvKey" class="btn btn-secondary">
+        Generate
+      </button>
+      <button v-else @click="showPrivate = !showPrivate" class="btn btn-secondary">
+        {{ showPrivate ? 'Hide' : 'Show' }}
+      </button>
+    </div>
+
+    <label for="public-key" class="mt-2">
+      Public Address
+    </label>
+    <div class="input-group">
+      <input v-model="pubKey" class="form-control" :class="{ 'is-invalid': error === 'public' }" type="text" id="public-key">
+      <button v-if="prvKey && !pubKey" @click="fillPubKey" class="btn btn-secondary">
+        Fill
+      </button>
+    </div>
+    
+
+    <form @submit.prevent="signMessage" class="mt-3">
+      <label for="message">
+        Message
+      </label>
+      <textarea v-model="message" class="form-control" :class="{ 'is-valid': verified === true, 'is-invalid': verified === false }" id="message" rows="3"></textarea>
+  
+      <button class="btn btn-primary mt-1">
+        Sign Message
+      </button>
+    </form>
+
+    <form @submit.prevent="verifySignature" class="mt-3">
+      <label for="signature">
+        Signature
+      </label>
+      <textarea v-model="signature" class="form-control" :class="{ 'is-invalid': error === 'signature' }" id="signature" rows="2"></textarea>
+      <button class="btn btn-primary mt-1">
+        Verify Signature
+      </button>
+    </form>
+  </div>
+
+  <script src="https://unpkg.com/vue@3.0.11"></script>
+  <script src="/lib/coin-table.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
